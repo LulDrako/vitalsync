@@ -1,0 +1,22 @@
+# Dépendances installées localement — reconstruites dans l'image via npm ci
+node_modules/
+
+# Logs applicatifs — inutiles dans l'image, peuvent contenir des données sensibles
+*.log
+npm-debug.log*
+
+# Fichiers d'environnement — contiennent des secrets, jamais dans une image Docker
+.env
+.env.*
+
+# Fichiers Git — historique de code inutile dans le conteneur
+.git/
+.gitignore
+
+# Dockerfile lui-même — inutile dans le conteneur
+Dockerfile
+.dockerignore
+
+# Répertoires de build locaux
+dist/
+coverage/

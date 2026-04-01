@@ -1,0 +1,67 @@
+services:
+
+  # ── Base de données PostgreSQL ──────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: vitalsync-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vitalsync}
+      POSTGRES_USER: ${POSTGRES_USER:-vitalsync}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vitalsync-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vitalsync}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── API Backend Node.js ─────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: vitalsync-api
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vitalsync}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vitalsync}
+    networks:
+      - vitalsync-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend React (Nginx) ──────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: vitalsync-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - vitalsync-network
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  vitalsync-network:
+    driver: bridge
