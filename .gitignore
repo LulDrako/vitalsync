@@ -1,28 +1,21 @@
-# Dépendances Node.js — ne pas versionner les packages installés localement
 node_modules/
 
-# Variables d'environnement — contiennent des secrets (mots de passe, tokens)
 .env
 .env.local
 .env.*.local
 
-# Logs — fichiers générés à l'exécution, inutiles dans le dépôt
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Couverture de tests — générée automatiquement à chaque run
 coverage/
 
-# Fichiers systèmes macOS — métadonnées inutiles
 .DS_Store
 
-# Répertoires de build — artefacts générés, pas du code source
 dist/
 build/
 
-# Fichiers d'IDE — configuration locale propre à chaque développeur
 .vscode/
 .idea/
 *.swp
