@@ -13,9 +13,6 @@ npm-debug.log*
 .git/
 .gitignore
 
-# Répertoire de tests — non nécessaire dans l'image de production (stage 2)
-test/
-
 # Dockerfile lui-même — inutile dans le conteneur
 Dockerfile
 .dockerignore

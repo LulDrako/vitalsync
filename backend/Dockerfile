@@ -35,7 +35,7 @@ WORKDIR /app
 
 COPY package*.json ./
 # --only=production : exclut les devDependencies de l'image finale
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
 COPY server.js .
 
