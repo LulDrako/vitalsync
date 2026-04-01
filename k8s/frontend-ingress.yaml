@@ -1,0 +1,37 @@
+# Ingress — point d'entrée unique HTTP/HTTPS depuis l'extérieur du cluster.
+# Choix Ingress vs NodePort/LoadBalancer :
+# - NodePort : expose un port aléatoire sur chaque nœud, peu adapté à la prod
+# - LoadBalancer : crée un LB cloud (coûteux, 1 IP par service)
+# - Ingress : un seul LB pour tous les services, routing par règles HTTP (optimal)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vitalsync-ingress
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    # Redirection automatique HTTP → HTTPS en production
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: vitalsync.local
+      http:
+        paths:
+          # Trafic frontend — fichiers statiques
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vitalsync-frontend-svc
+                port:
+                  number: 80
+
+          # Trafic API — redirigé vers le backend via le Service ClusterIP
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: vitalsync-backend-svc
+                port:
+                  number: 80

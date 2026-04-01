@@ -1,0 +1,68 @@
+# Deployment — gère le cycle de vie des pods backend.
+# Kubernetes maintient en permanence 2 réplicas opérationnels :
+# si un pod tombe, le ReplicaSet en recrée un automatiquement (self-healing).
+# 2 réplicas : 1 seul = SPOF, 3+ = surcoût inutile à ce stade.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vitalsync-backend
+  namespace: default
+  labels:
+    app: vitalsync-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vitalsync-backend
+  template:
+    metadata:
+      labels:
+        app: vitalsync-backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/luldrako/vitalsync-backend:latest
+          ports:
+            - containerPort: 3000
+
+          # Variables d'environnement — le mot de passe est injecté depuis
+          # le Secret (jamais en clair dans le manifeste)
+          env:
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+          # Liveness probe — Kubernetes interroge /health toutes les 30s.
+          # Si elle échoue 3 fois consécutives, le pod est redémarré automatiquement.
+          # Cela garantit que les pods non-fonctionnels sont remplacés sans
+          # intervention humaine.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            failureThreshold: 3
+            timeoutSeconds: 5
+
+          # Readiness probe — le pod ne reçoit du trafic que s'il est prêt
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
