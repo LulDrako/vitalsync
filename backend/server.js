@@ -15,4 +15,5 @@ app.get("/api/users", (req, res) => {
   res.json([{ id: 1, name: "Alice" }]);
 });
 
-app.listen(3000, () => console.log("VitalSync API on :3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`VitalSync API on :${PORT}`));
